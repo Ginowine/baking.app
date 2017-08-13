@@ -2,6 +2,8 @@ package challenge.github.alc.com.bakingapp.fragments;
 
 
 import android.os.Bundle;
+import android.support.design.widget.CoordinatorLayout;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
@@ -17,7 +19,9 @@ import challenge.github.alc.com.bakingapp.IdlingResource.SimpleIdlingResource;
 import challenge.github.alc.com.bakingapp.R;
 import challenge.github.alc.com.bakingapp.activities.RecipeActivity;
 import challenge.github.alc.com.bakingapp.adapters.RecipeAdapter;
+import challenge.github.alc.com.bakingapp.networkUtills.ErrorUtils;
 import challenge.github.alc.com.bakingapp.networkUtills.InitRetrofit;
+import challenge.github.alc.com.bakingapp.pojo.APIError;
 import challenge.github.alc.com.bakingapp.pojo.Recipe;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -30,6 +34,8 @@ import challenge.github.alc.com.bakingapp.networkUtills.IRecipe;
  */
 public class RecipeFragment extends Fragment {
 
+    private CoordinatorLayout coordinatorLayout;
+
 
     public RecipeFragment() {
 
@@ -37,11 +43,15 @@ public class RecipeFragment extends Fragment {
     }
 
 
+
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         RecyclerView recyclerView;
 
         View rootView = inflater.inflate(R.layout.recipe_fragment_body_part, container, false);
+
+        coordinatorLayout = (CoordinatorLayout) rootView.findViewById(R.id.coordinatorlayout);
 
         recyclerView=(RecyclerView)  rootView.findViewById(R.id.recipe_recycler);
        final RecipeAdapter recipesAdapter =new RecipeAdapter((RecipeActivity)getActivity());
@@ -58,7 +68,7 @@ public class RecipeFragment extends Fragment {
             recyclerView.setLayoutManager(mLayoutManager);
         }
 
-        IRecipe iRecipe = InitRetrofit.Retrieve();
+        IRecipe iRecipe = InitRetrofit.createService(IRecipe.class);
         Call<ArrayList<Recipe>> recipe = iRecipe.getRecipe();
 
         final SimpleIdlingResource idlingResource = (SimpleIdlingResource)((RecipeActivity)getActivity()).getIdlingResource();
@@ -74,21 +84,30 @@ public class RecipeFragment extends Fragment {
                 Integer statusCode = response.code();
                 Log.v("status code: ", statusCode.toString());
 
-                ArrayList<Recipe> recipes = response.body();
+                if (response.isSuccessful()){
+                    ArrayList<Recipe> recipes = response.body();
 
-                Bundle recipesBundle = new Bundle();
-                recipesBundle.putParcelableArrayList(ALL_RECIPES, recipes);
+                    Bundle recipesBundle = new Bundle();
+                    recipesBundle.putParcelableArrayList(ALL_RECIPES, recipes);
 
-                recipesAdapter.setRecipeData(recipes,getContext());
-                if (idlingResource != null) {
-                    idlingResource.setIdleState(true);
+                    recipesAdapter.setRecipeData(recipes,getContext());
+                    if (idlingResource != null) {
+                        idlingResource.setIdleState(true);
+                    }
+                }else {
+                    APIError error = ErrorUtils.parseError(response);
+                    Snackbar snackbar = Snackbar.make(coordinatorLayout, error.getMessage(), Snackbar.LENGTH_LONG);
+                    snackbar.show();
                 }
-
             }
 
             @Override
             public void onFailure(Call<ArrayList<Recipe>> call, Throwable t) {
                 Log.v("http fail: ", t.getMessage());
+
+                Snackbar snackbar = Snackbar.make(coordinatorLayout, "Please turn Internet on", Snackbar.LENGTH_LONG);
+                snackbar.show();
+
             }
         });
 

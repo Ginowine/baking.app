@@ -7,6 +7,7 @@ import challenge.github.alc.com.bakingapp.pojo.APIError;
 import okhttp3.ResponseBody;
 import retrofit2.Converter;
 import retrofit2.Response;
+import retrofit2.Retrofit;
 
 /**
  * Created by Gino Osahon on 10/08/2017.
@@ -16,8 +17,7 @@ public class ErrorUtils {
     public static APIError parseError(Response<?> response) {
 
         Converter<ResponseBody, APIError> converter =
-                iRecipe.retrofit()
-                        .responseBodyConverter(APIError.class, new Annotation[0]);
+                InitRetrofit.retrofit().responseBodyConverter(APIError.class, new Annotation[0]);
 
         APIError error;
 

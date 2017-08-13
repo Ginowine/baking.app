@@ -240,6 +240,7 @@ public class RecipeStepDetailFragment extends Fragment {
         if (player!=null) {
             player.stop();
             player.release();
+            player = null;
         }
     }
 
@@ -249,6 +250,7 @@ public class RecipeStepDetailFragment extends Fragment {
         if (player!=null) {
             player.stop();
             player.release();
+            player = null;
         }
     }
 

@@ -15,7 +15,7 @@ public class APIError {
         return statusCode;
     }
 
-    public String message() {
+    public String getMessage() {
         return message;
     }
 }
